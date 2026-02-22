@@ -1,0 +1,68 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+    types: [closed]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Clipboard Panel OS
+    runs-on: macos-14
+    # Run on push/dispatch, or on PR merge (not just close)
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | tail -1)"
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project WinCForMac.xcodeproj \
+            -scheme WinCForMac \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package app into zip
+        run: |
+          APP_PATH="build/Build/Products/Release/WinCForMac.app"
+          # Rename the .app bundle to match the display name
+          mv "$APP_PATH" "build/Build/Products/Release/Clipboard Panel OS.app"
+          cd "build/Build/Products/Release"
+          zip -r -y "Clipboard-Panel-OS.zip" "Clipboard Panel OS.app"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Clipboard-Panel-OS
+          path: build/Build/Products/Release/Clipboard-Panel-OS.zip
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Clipboard-Panel-OS
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Clipboard-Panel-OS.zip
+          generate_release_notes: true
