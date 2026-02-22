@@ -26,7 +26,14 @@ Press **⌘⇧V** (Cmd+Shift+V) anywhere to pop up a floating panel with your re
 1. Go to the [Releases](https://github.com/Baravik/ClipboardPanelMac/releases) page
 2. Download the latest **Clipboard-Panel-OS.zip** from the Assets section
 3. Unzip and drag **Clipboard Panel OS.app** into your `/Applications` folder
-4. Launch the app — you'll see a clipboard icon (📋) in your menu bar
+4. **Important — remove the macOS quarantine flag** (required because the app is not notarized):
+   ```bash
+   xattr -cr "/Applications/Clipboard Panel OS.app"
+   ```
+   Or: right-click the app → **Open** → click **Open** in the dialog.
+5. Launch the app — you'll see a clipboard icon (📋) in your menu bar
+
+> **"App is damaged and can't be opened"?** — This is macOS Gatekeeper blocking unsigned downloads. Run the `xattr -cr` command above to fix it.
 
 ### Build from source
 
