@@ -33,8 +33,8 @@ Press **⌘⇧V** (Cmd+Shift+V) anywhere to pop up a floating panel with your re
 Requires **Xcode 15+** and **macOS 14+**.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ClipboardPanelOS.git
-cd ClipboardPanelOS
+git clone https://github.com/Baravik/ClipboardPanelMac.git
+cd ClipboardPanelMac
 xcodebuild -project WinCForMac.xcodeproj -scheme WinCForMac -configuration Release build
 ```
 
