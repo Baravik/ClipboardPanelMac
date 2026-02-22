@@ -48,21 +48,57 @@ jobs:
           name: Clipboard-Panel-OS
           path: build/Build/Products/Release/Clipboard-Panel-OS.zip
 
-  release:
-    name: Create GitHub Release
+  tag-and-release:
+    name: Create Tag & GitHub Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Only tag+release on PR merge or push to main (not on existing tag pushes)
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate next version tag
+        id: tag
+        run: |
+          # Get the latest tag, default to v0.0.0 if none exists
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_TAG="v1.0.0"
+          else
+            # Increment patch version: v1.0.0 -> v1.0.1
+            MAJOR=$(echo "$LATEST_TAG" | sed 's/v//' | cut -d. -f1)
+            MINOR=$(echo "$LATEST_TAG" | sed 's/v//' | cut -d. -f2)
+            PATCH=$(echo "$LATEST_TAG" | sed 's/v//' | cut -d. -f3)
+            PATCH=$((PATCH + 1))
+            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "tag=$NEXT_TAG" >> "$GITHUB_OUTPUT"
+          echo "Auto-generated tag: $NEXT_TAG"
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.tag.outputs.tag }}" -m "Release ${{ steps.tag.outputs.tag }}"
+          git push origin "${{ steps.tag.outputs.tag }}"
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: Clipboard-Panel-OS
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Clipboard Panel OS ${{ steps.tag.outputs.tag }}
           files: Clipboard-Panel-OS.zip
           generate_release_notes: true
