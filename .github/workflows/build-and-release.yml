@@ -105,3 +105,69 @@ jobs:
           name: Clipboard Panel OS ${{ steps.tag.outputs.tag }}
           files: Clipboard-Panel-OS.zip
           generate_release_notes: true
+
+  update-homebrew:
+    name: Update Homebrew Cask
+    needs: tag-and-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Clipboard-Panel-OS
+
+      - name: Get version from tag-and-release
+        id: version
+        run: |
+          # Fetch the latest tag from the repo
+          LATEST_TAG=$(git ls-remote --tags --sort=-v:refname https://github.com/Baravik/ClipboardPanelMac.git 'refs/tags/v*' | head -1 | sed 's|.*refs/tags/||')
+          VERSION="${LATEST_TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Updating cask to version $VERSION"
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          SHA=$(shasum -a 256 Clipboard-Panel-OS.zip | awk '{print $1}')
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "SHA256: $SHA"
+
+      - name: Update Homebrew tap
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          git clone https://x-access-token:${GH_TOKEN}@github.com/Baravik/homebrew-tap.git
+          cd homebrew-tap
+
+          cat > Casks/clipboard-panel-os.rb << 'CASK'
+          cask "clipboard-panel-os" do
+            version "VERSION_PLACEHOLDER"
+            sha256 "SHA_PLACEHOLDER"
+
+            url "https://github.com/Baravik/ClipboardPanelMac/releases/download/v#{version}/Clipboard-Panel-OS.zip"
+            name "Clipboard Panel OS"
+            desc "Clipboard history manager for macOS — like Windows+V"
+            homepage "https://github.com/Baravik/ClipboardPanelMac"
+
+            depends_on macos: ">= :sonoma"
+
+            app "Clipboard Panel OS.app"
+
+            zap trash: [
+              "~/Library/Preferences/com.wincformac.app.plist",
+            ]
+          end
+          CASK
+
+          # Replace placeholders with actual values
+          sed -i "s/VERSION_PLACEHOLDER/${{ steps.version.outputs.version }}/" Casks/clipboard-panel-os.rb
+          sed -i "s/SHA_PLACEHOLDER/${{ steps.sha.outputs.sha256 }}/" Casks/clipboard-panel-os.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/clipboard-panel-os.rb
+          git commit -m "Update Clipboard Panel OS to ${{ steps.version.outputs.tag }}"
+          git push
