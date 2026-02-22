@@ -3,18 +3,12 @@ name: Build & Release
 on:
   push:
     branches: [main]
-    tags: ['v*']
-  pull_request:
-    branches: [main]
-    types: [closed]
   workflow_dispatch:
 
 jobs:
   build:
     name: Build Clipboard Panel OS
     runs-on: macos-14
-    # Run on push/dispatch, or on PR merge (not just close)
-    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,11 +48,6 @@ jobs:
   tag-and-release:
     name: Create Tag & GitHub Release
     needs: build
-    # Only tag+release on PR merge or push to main (not on existing tag pushes)
-    if: >-
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')) ||
-      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
