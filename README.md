@@ -21,7 +21,15 @@ Press **⌘⇧V** (Cmd+Shift+V) anywhere to pop up a floating panel with your re
 
 ## Download
 
-### From GitHub Releases (recommended)
+### Via Homebrew (recommended)
+
+```bash
+brew install --cask Baravik/tap/clipboard-panel-os
+```
+
+This handles everything automatically — no quarantine issues.
+
+### From GitHub Releases
 
 1. Go to the [Releases](https://github.com/Baravik/ClipboardPanelMac/releases) page
 2. Download the latest **Clipboard-Panel-OS.zip** from the Assets section
