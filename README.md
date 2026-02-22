@@ -23,8 +23,8 @@ Press **⌘⇧V** (Cmd+Shift+V) anywhere to pop up a floating panel with your re
 
 ### From GitHub Releases (recommended)
 
-1. Go to the [Releases](../../releases) page
-2. Download the latest **Clipboard.Panel.OS.zip** from the Assets section
+1. Go to the [Releases](https://github.com/Baravik/ClipboardPanelMac/releases) page
+2. Download the latest **Clipboard-Panel-OS.zip** from the Assets section
 3. Unzip and drag **Clipboard Panel OS.app** into your `/Applications` folder
 4. Launch the app — you'll see a clipboard icon (📋) in your menu bar
 
