@@ -39,8 +39,11 @@ jobs:
           APP_PATH="build/Build/Products/Release/WinCForMac.app"
           # Rename the .app bundle to match the display name
           mv "$APP_PATH" "build/Build/Products/Release/Clipboard Panel OS.app"
+          # Remove any extended attributes / quarantine flags before packaging
+          xattr -cr "build/Build/Products/Release/Clipboard Panel OS.app"
           cd "build/Build/Products/Release"
-          zip -r -y "Clipboard-Panel-OS.zip" "Clipboard Panel OS.app"
+          # Use ditto to create a clean zip without macOS metadata
+          ditto -c -k --sequesterRsrc --keepParent "Clipboard Panel OS.app" "Clipboard-Panel-OS.zip"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
