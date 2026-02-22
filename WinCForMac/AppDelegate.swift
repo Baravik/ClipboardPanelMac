@@ -108,6 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func observeAccessibility() {
         accessibilityManager.$isAccessibilityGranted
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] granted in
                 // If panel is showing onboarding and permission is granted, refresh it
