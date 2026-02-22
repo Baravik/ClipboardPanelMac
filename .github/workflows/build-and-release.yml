@@ -2,14 +2,19 @@ name: Build & Release
 
 on:
   push:
-    branches: [FirstUpload, main]
+    branches: [main]
     tags: ['v*']
+  pull_request:
+    branches: [main]
+    types: [closed]
   workflow_dispatch:
 
 jobs:
   build:
     name: Build Clipboard Panel OS
     runs-on: macos-14
+    # Run on push/dispatch, or on PR merge (not just close)
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
